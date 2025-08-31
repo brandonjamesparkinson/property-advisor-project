@@ -53,7 +53,7 @@ public class ListingsController(AppDbContext db) : ControllerBase
         var total = await q.CountAsync();
         var items = await q.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
-        var result = new
+        return Ok(new
         {
             page,
             pageSize,
@@ -78,12 +78,10 @@ public class ListingsController(AppDbContext db) : ControllerBase
                         l.Property.Address.Longitude
                     }
                 },
-                images = l.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).ToList(),
+                images = l.Images.OrderBy(i => i.SortOrder).Select(i => i.Url),
                 branch = l.Branch == null ? null : new { l.Branch.Name, l.Branch.Phone }
             })
-        };
-
-        return Ok(result);
+        });
     }
 
     [HttpGet("{id:int}")]
