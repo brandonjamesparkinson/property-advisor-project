@@ -1,35 +1,41 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [data, setData] = useState(null);
+  const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        // try a simple, always-available endpoint first
+        const res = await fetch("/api/health");
+        const text = await res.text();
+        setData({ health: text });
+
+        // then try listings (adjust if your route differs)
+        const r2 = await fetch("/api/v1/listings?page=1&pageSize=5");
+        if (!r2.ok) throw new Error(`Listings HTTP ${r2.status}`);
+        const json = await r2.json();
+        setData((d) => ({ ...d, listings: json }));
+      } catch (e) {
+        console.error(e);
+        setErr(String(e));
+      }
+    })();
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
+    <div style={{ color: "#eee", padding: "2rem", fontFamily: "system-ui, sans-serif" }}>
+      <h1>Frontend ↔ API check</h1>
+      {err && (
+        <p style={{ color: "#ff8c8c" }}>
+          Error: {err} — is the API running at <code>https://localhost:7130</code>?
+          Open Swagger once to trust the HTTPS certificate.
         </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+      )}
+      <pre style={{ background: "#222", padding: "1rem", overflowX: "auto" }}>
+        {JSON.stringify(data, null, 2)}
+      </pre>
+    </div>
+  );
 }
-
-export default App
